@@ -104,15 +104,10 @@ installed app has its own settings, separate from `npm run dev`. The installer i
 Design rules: the renderer never touches Node or `ipcRenderer`; delete uses the OS Recycle Bin; undo covers
 rename, move, copy, create, zip and extract; nothing overwrites and nothing deletes what it did not create.
 
-## Known unverified
-
-Tested on Linux and in Chromium, not yet on real Windows or inside real Electron: the installer build, pdf.js worker
-loading, the real Groq API with the chosen model, thumbnails, video and PDF behaviour, the Recycle Bin view, ZIP on
-real files. Details and history of every bug: [docs/LESSONS.md](docs/LESSONS.md).
 
 ## Major errors we hit (and fixed)
 
-Full list of every bug: [docs/LESSONS.md](docs/LESSONS.md). These three mattered most.
+Full list of  These three major bugs
 
 **1. Recycle Bin did not show what Windows holds.** The old build kept its own bin, and the first rebuilt view
 showed nothing for files deleted in Windows. Fix: delete uses the real OS Recycle Bin (`shell.trashItem`), and the

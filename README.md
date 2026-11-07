@@ -2,11 +2,10 @@
 
 A fast dual-pane file manager for Windows, built with Electron, Vite, TypeScript and React. Performance first:
 virtual lists, streamed folder listing and lazy thumbnails, so a 50,000-file folder stays smooth.
-Built by [SAINT SYSTEMS](https://saintsystems.ai).
+Built by Antony Wairia
 
 > Status: working, tested on Linux and in Chromium, **not yet fully verified on real Windows**. See
 > [Known unverified](#known-unverified) and [docs/LESSONS.md](docs/LESSONS.md) (every error caught along the way).
-
 
 ## Features
 
@@ -60,9 +59,7 @@ Progress shows in the status bar with Cancel. Password-protected ZIPs are not su
 
 **PDFs.** Enter opens the built-in reader (Ctrl+F search, +/- zoom, PgUp/PgDn). Right-click for "Open with default app".
 
-**Copilot.** Open it from the sidebar or Ctrl+J, paste a free Groq API key from console.groq.com when asked. It
-is stored encrypted on your PC and never leaves the main process. Ask things like "sort the PDFs in this folder
-into folders by year". It reads, then shows a plan card; review it and press Apply. It cannot delete permanently.
+See [Using the Copilot](#using-the-copilot-ai) below.
 
 **System Monitor.** Live while the page is open. Anything your PC does not provide shows N/A with the reason (CPU
 temperature often needs an ACPI zone or administrator rights; fans, voltage and power need a hardware driver, so
@@ -71,6 +68,55 @@ they are not shown).
 **Installing.** `npm run dist`, run `dist\ORBIT-Setup-0.1.0.exe`, then start ORBIT from the Start menu. The
 installed app has its own settings, separate from `npm run dev`. The installer is unsigned: SmartScreen says
 "More info" then "Run anyway".
+
+## Using the Copilot (AI)
+
+The Copilot is an assistant that can look at your files and propose changes. It uses [Groq](https://groq.com), which
+has a free tier. You bring your own key; ORBIT never ships one.
+
+**Set it up (one time, about a minute)**
+
+1. Go to **console.groq.com/keys**, sign in and click **Create API Key**. Copy it. It starts with `gsk_`.
+2. In ORBIT open **Copilot** in the sidebar (or press **Ctrl+J**).
+3. Paste the key into the box that says `gsk_…` and press **Save key** (or Enter). ORBIT checks it with Groq
+   and tells you if it is wrong.
+4. Done. The box is replaced by the chat. To remove the key later, click **Remove key** at the top of the panel
+   (it asks you to click twice).
+
+Where the key lives: encrypted on your PC with Windows' own protection (Electron `safeStorage`), used only by ORBIT's
+main process, never shown in the interface again and never written to a plain text file. If a PC cannot encrypt,
+the panel says so and keeps the key only until ORBIT closes. Never put the key in the code or in GitHub.
+
+**What it can do**
+
+It always knows what you are looking at: the folder in the active pane, the other pane, your selection, and the
+PDF and page open in the reader. It can list folders, search for files, read text files, read PDFs and check file
+details. Files are sent to Groq only when the Copilot reads one to answer you. Key and password files (`.env`,
+`.ssh`, `*.pem` and similar) are never shown to it.
+
+**Things to try**
+
+- "What is in this folder, and what looks like clutter?"
+- "Find my invoices from 2025 and put them in a folder called Invoices."
+- "Summarise this PDF" (open it in the reader first), or "which of these PDFs mentions warranty?"
+- "Rename these screenshots by date." (select them first)
+- "Make a folder for each file type here and sort everything into them."
+
+**Making changes safely.** When the Copilot wants to change something (new folder, move, copy, rename, send to
+the Recycle Bin) it shows a **plan card** listing every step. Nothing happens until you press **Apply**. Every plan is
+re-checked against the real disk first (paths exist, names are legal, nothing moves into itself). It cannot delete
+permanently, and the steps go through the normal queue, so **Ctrl+Z** undoes moves, copies and renames. Items sent
+to the Recycle Bin are restored from the Recycle Bin view.
+
+**Limits and troubleshooting**
+
+| Message or problem | What it means / what to do |
+| --- | --- |
+| "bad key" or it asks for the key again | The key was removed or is invalid on Groq's side. Create a new one and paste it |
+| Rate limit or "try again in N seconds" | Free-tier limits. Wait, or ask something smaller |
+| Model error | Groq retires models often. ORBIT picks one from Groq's live list, so just try again |
+| Slow or cut-off answers | It stops after 6 reasoning steps and 12 tool calls per question to stay fast. Ask a narrower question |
+| Nothing happens after a plan | You still need to press **Apply** on the plan card |
 
 ## Spec sheet
 
@@ -155,56 +201,28 @@ hardware driver, so they are not shown.
 
 ## Build history
 
-3. DONE: keyboard navigation, multi-select, clipboard, rename, undo
-3b. DONE: sidebar (quick access + drives with free space), breadcrumbs, search
-    (instant folder filter; Enter = recursive search; Ctrl+F focuses the box)
-3c. DONE: Home page (greeting, quick access, drives, recent folders), light/dark theme toggle
-    (remembered; follows the system theme on first launch), Details / Compact / Icons layouts,
-    sorting (toolbar or click a column header), colour-coded file icons
-4. DONE: dual pane (toggle in the title bar) with drag and drop between panes, per-pane path bar and search
-5. DONE: Quick Look (Space), accent colours (palette button), status bar with live fps + folder-open time
-5b. DONE: thumbnails (images, video, PDF) - OS shell thumbnails on Windows/macOS, disk cache in userData/thumbs,
-    3 at a time, de-duplicated, skipped when the tile scrolls away, pruned to 200 MB
-5c. DONE: Enter / double-click opens files in their default app (also the Open button in Quick Look)
-5d. DONE: right-click menus (files, folders, empty space, Recycle Bin) and the Explorer-style command bar
-    (New, Cut, Copy, Paste, Rename, Delete). New folder / text document start in rename mode.
-5e. DONE: resource meter in the status bar (ORBIT's own CPU and memory) and a System Monitor page
-    (sidebar): CPU gauge + per-core load + 2-minute history, memory, storage, ORBIT's own processes.
-    Live CPU clock, CPU temperature, GPU load + memory, disk and network come from Windows performance counters
-    through the built-in `typeperf` (started only while the page is open; anything a PC doesn't provide shows N/A with
-    the reason). If the PC has no temperature counter, CPU temp falls back to the ACPI thermal zone (WMI, via
-    PowerShell, polled every 5 s while the page is open). Windows usually allows that only to an administrator,
-    and the zone may be the board rather than the exact CPU core, so the tile says "ACPI zone" and, if refused,
-    "Needs administrator rights". Fan speed, voltage, current and power need a hardware driver, so they are not shown. NOT yet run on a
-    real Windows machine.
-7. DONE: Recycle Bin view (Windows): list, restore, delete permanently, empty. Reads the bin straight from
-    disk ($Recycle.Bin\<your SID>: $I record + $R data), no PowerShell. Ids are only accepted if they sit directly
-    in your own bin folder; restore never overwrites; destructive actions ask first. Tested against fake bin
-    folders on Linux, NOT yet on a real Windows machine.
-8a. DONE: PDF reader (pdf.js, loaded on first use so start-up is unchanged). Enter / double-click on a PDF opens it
-    in ORBIT; the right-click menu keeps "Open with default app". Only the pages on screen are drawn, with
-    selectable text, zoom (fit width, + / -, Ctrl+wheel), page jump, search with highlights (matches within a
-    line of text), password-protected files and a clear message for damaged ones. The PDF is read by the main
-    process (size-capped at 300 MB) and passed over IPC. NOT yet run inside real Electron on Windows (the
-    worker loads from file://), only in Chromium against the built page.
-8b. DONE: Copilot (Groq tool calling; the model is chosen from Groq's live model list, because Groq retires models often). Sidebar "Copilot" or Ctrl+J opens a panel at the right.
-    It is told what you are looking at (active folder, other pane, selection, the PDF and page open in the reader)
-    and works through tools: list_folder, search_files, read_text_file, read_pdf, file_info (all read-only), and
-    propose_changes. Changes (new folder, move, copy, rename, Recycle Bin) show up as a plan card; nothing happens
-    until you click Apply, and there is no permanent delete. Every plan is re-checked against the real disk before
-    you see it (paths exist, names legal, nothing moved into itself). Key/password files (.env, .ssh, *.pem ...) are
-    never shown to the model. The Groq key is stored encrypted (Electron safeStorage) in the main process only; if
-    the PC cannot encrypt, it lives in memory until ORBIT closes. Free-tier limits are reported plainly. Logic is
-    unit-tested with a scripted fake model and fake network; NOT yet run against the real Groq API or inside real
-    Electron on Windows.
-8c. DONE: ZIP. Right-click any selection -> "Compress to ZIP" (single item: <name>.zip, several: Archive.zip, never
-    overwrites). Right-click a .zip -> "Extract to folder" (new folder named after the archive) or "Extract here".
-    Runs in the operation queue with a progress % in the status bar, Cancel, and Ctrl+Z (removes the archive, or
-    only the files an extraction created). Extraction never overwrites, refuses unsafe paths (zip-slip, drive
-    letters), skips symbolic links, handles Windows-illegal names, and cleans up after itself on failure or
-    cancel. Password-protected ZIPs are refused (not supported yet). Unit-tested on Linux; NOT yet run on real
-    Windows files.
-8d. DONE: Windows installer (electron-builder, NSIS) with the logo icon, and a postinstall step that replaces
-    the manual electron/esbuild install.js commands. The unpacked package layout was built and inspected on
-    Linux; the installer itself has NOT been built or run on Windows yet.
-8e. LATER: more themes, streaming Copilot replies, click a path in a reply to open it, password-protected ZIP, code signing
+Status key: **Owner-checked** = confirmed working on the owner's Windows PC. **Tests** = unit-tested on Linux
+(and shown in Chromium) but not yet confirmed on real Windows.
+
+| # | Feature | What it does | Status |
+| --- | --- | --- | --- |
+| 1 | Foundation | Electron + Vite + React shell, typed IPC, sandboxed renderer, streamed folder listing | Owner-checked |
+| 2 | Operation queue | One queue for copy, move, rename, trash with progress, cancel and undo | Owner-checked |
+| 3 | Keyboard and selection | Arrow keys, multi-select, clipboard, rename, undo | Owner-checked |
+| 3b | Sidebar, breadcrumbs, search | Quick access, drives with free space, path bar, instant filter, Enter = search subfolders | Owner-checked |
+| 3c | Home page and themes | Greeting, quick access, drives, recent folders; light/dark; Details, Compact and Icons layouts; sorting | Owner-checked |
+| 4 | Dual pane | Toggle in the title bar, drag and drop between panes, per-pane path bar and search | Owner-checked |
+| 5 | Quick Look and status bar | Space preview, accent colours, live fps and folder-open time | Owner-checked |
+| 5b | Thumbnails | Images, video and PDF via OS thumbnails; 3 at a time; disk cache pruned to 200 MB | Tests |
+| 5c | Open in default app | Enter or double-click opens files in their own app | Tests |
+| 5d | Menus and command bar | Right-click menus and the Explorer-style bar (New, Cut, Copy, Paste, Rename, Delete) | Tests |
+| 5e | System Monitor | CPU gauge, per-core load, history, memory, storage, GPU, disk, network, ORBIT's own usage. CPU temp falls back to the ACPI zone, otherwise shows N/A with the reason | Owner-checked (CPU temp is N/A on the dev PC) |
+| 6 | Recycle Bin view | List, restore, delete permanently, empty; reads the bin from disk | Tests |
+| 7 | PDF reader | pdf.js, loaded on first use; zoom, page jump, search, selectable text, password and damaged-file messages | Tests |
+| 8 | Copilot | Groq tool-calling assistant with plan cards; model picked from Groq's live list | Owner-checked ("seems to work") |
+| 9 | Logo and Home polish | ORBIT logo in the title bar and Home page, themed by the accent colour | Owner-checked |
+| 10 | ZIP | Compress any selection, extract to a folder or here, safe against unsafe archives | Tests |
+| 11 | Installer | NSIS installer with the logo icon, portable build, postinstall that fetches Electron and esbuild | Owner-checked (built on Windows) |
+
+Later: more themes, streaming Copilot replies, clicking a path in a reply to open it, password-protected ZIPs,
+code signing for the installer.

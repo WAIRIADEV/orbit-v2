@@ -7,6 +7,7 @@ Built by [SAINT SYSTEMS](https://saintsystems.ai).
 > Status: working, tested on Linux and in Chromium, **not yet fully verified on real Windows**. See
 > [Known unverified](#known-unverified) and [docs/LESSONS.md](docs/LESSONS.md) (every error caught along the way).
 
+
 ## Features
 
 - Dual pane with drag and drop (Ctrl = copy), breadcrumbs, instant filter and recursive search

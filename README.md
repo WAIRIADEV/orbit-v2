@@ -2,8 +2,10 @@
 
 A fast dual-pane file manager for Windows, built with Electron, Vite, TypeScript and React. Performance first:
 virtual lists, streamed folder listing and lazy thumbnails, so a 50,000-file folder stays smooth.
-Built by [SAINT SYSTEMS]
+Built by [SAINT SYSTEMS](https://saintsystems.ai).
 
+> Status: working, tested on Linux and in Chromium, **not yet fully verified on real Windows**. See
+> [Known unverified](#known-unverified) and [docs/LESSONS.md](docs/LESSONS.md) (every error caught along the way).
 
 ## Features
 
@@ -104,10 +106,15 @@ installed app has its own settings, separate from `npm run dev`. The installer i
 Design rules: the renderer never touches Node or `ipcRenderer`; delete uses the OS Recycle Bin; undo covers
 rename, move, copy, create, zip and extract; nothing overwrites and nothing deletes what it did not create.
 
+## Known unverified
+
+Tested on Linux and in Chromium, not yet on real Windows or inside real Electron: the installer build, pdf.js worker
+loading, the real Groq API with the chosen model, thumbnails, video and PDF behaviour, the Recycle Bin view, ZIP on
+real files. Details and history of every bug: [docs/LESSONS.md](docs/LESSONS.md).
 
 ## Major errors we hit (and fixed)
 
-Full list of  These three major bugs
+Full list of every bug: [docs/LESSONS.md](docs/LESSONS.md). These three mattered most.
 
 **1. Recycle Bin did not show what Windows holds.** The old build kept its own bin, and the first rebuilt view
 showed nothing for files deleted in Windows. Fix: delete uses the real OS Recycle Bin (`shell.trashItem`), and the

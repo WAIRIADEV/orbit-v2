@@ -4,7 +4,7 @@ A fast dual-pane file manager for Windows, built with Electron, Vite, TypeScript
 virtual lists, streamed folder listing and lazy thumbnails, so a 50,000-file folder stays smooth.
 Built by Antony Wairia
 
-> Status: working, tested on Linux and in Chromium, **not yet fully verified on real Windows**. See
+> Status: working, tested on windows
 > [Known unverified](#known-unverified) and [docs/LESSONS.md](docs/LESSONS.md) (every error caught along the way).
 
 ## Features
@@ -15,7 +15,7 @@ Built by Antony Wairia
 - Quick Look (Space), thumbnails for images, video and PDF, built-in PDF reader (search, zoom, selectable text)
 - Recycle Bin view that shows what Windows holds: restore, delete permanently, empty
 - System Monitor: CPU, per-core load, clock, temperature (when the PC exposes it), GPU, memory, disk, network
-- Copilot sidebar (Groq): understands the folder you are in, reads files and PDFs, and proposes changes as a plan
+- Copilot sidebar (Groq LLM agent, see [AI engineering](#ai-engineering-how-the-copilot-works)): understands the folder you are in, reads files and PDFs, and proposes changes as a plan
   card; nothing happens until you click Apply
 - Home page, light/dark theme, accent colours, Details / Compact / Icons layouts, right-click menus, command bar
 - Installer with the ORBIT logo icon
@@ -117,6 +117,58 @@ to the Recycle Bin are restored from the Recycle Bin view.
 | Model error | Groq retires models often. ORBIT picks one from Groq's live list, so just try again |
 | Slow or cut-off answers | It stops after 6 reasoning steps and 12 tool calls per question to stay fast. Ask a narrower question |
 | Nothing happens after a plan | You still need to press **Apply** on the plan card |
+
+## AI engineering: how the Copilot works
+
+ORBIT's Copilot is a small, safe **LLM agent**: a language model that can use tools on your computer, wrapped in
+guardrails written as ordinary, tested code. It is one of the core AI engineering projects in the SAINT SYSTEMS portfolio.
+
+**The idea.** You write in plain language. A large language model (NLP) works out the intent, and decides which tool
+to call. ORBIT's code runs the tool, feeds the result back, and repeats until the model has an answer or a plan. The
+model never touches your files directly.
+
+```
+ you ──"sort my invoices by year"──▶ Copilot panel (renderer)
+                                          │ typed IPC
+                                          ▼
+                              Agent loop (main process)
+        context + tool list ──▶ Groq LLM ──▶ tool call? ──yes──▶ run tool on disk ──┐
+                                   ▲                                                │
+                                   └────────────── result goes back ◀───────────────┘
+                                          │ no more tool calls
+                                          ▼
+                       propose_changes ──▶ validate against the real disk ──▶ plan card
+                                                                                  │ you press Apply
+                                                                                  ▼
+                                                              normal operation queue (undoable)
+```
+
+| Concept | How ORBIT does it |
+| --- | --- |
+| Natural language understanding | An open LLM on Groq. No custom NLP code, no intent rules |
+| Tool calling | Six tools: `list_folder`, `search_files`, `read_text_file`, `read_pdf`, `file_info` (all read-only) and `propose_changes` |
+| Context grounding | Every request carries the active folder, the other pane, the selection and the PDF page open in the reader |
+| Agent loop | The model may call tools repeatedly, capped at 6 steps and 12 tool calls per question |
+| Model selection | Chosen at runtime from Groq's live model list in a preference order, with one retry if the model is retired. A hard-coded name broke once (see LESSONS) |
+| Human in the loop | The model can only *propose*. Changes appear as a plan card and run only after Apply |
+| Plan validation | Every proposed path, name and move is re-checked against the real disk before you see it. Models can hallucinate paths, so the model's output is never trusted |
+| Least privilege | Read-only tools, no permanent delete, no shell, no network access for tools |
+| Secret handling | Key/password files are blocked from the model; the Groq key is encrypted and held only in the main process |
+| Testability | The agent runs against a scripted fake model and a fake network in unit tests, so the logic is tested without calling a real API |
+| Failure handling | Rate limits, bad keys and retired models produce plain-language messages instead of crashes |
+
+**Why this design.** An LLM is good at understanding messy language and bad at being trusted with a delete button.
+The split is deliberate: the model handles language and planning, deterministic code handles safety, and a human
+approves anything that changes data. The same pattern (tools, validation, approval) applies to any agent that acts on
+real systems.
+
+**Skills this project demonstrates:** LLM tool calling and agent loops, prompt and context design, guardrails and
+output validation, secure key handling, provider-agnostic model selection, testing non-deterministic systems with
+fakes, and shipping the result as a desktop app.
+
+**What is not done yet:** streaming replies, conversation memory across sessions, a retrieval step for very large
+folders, and an automated evaluation set that scores the Copilot on a fixed list of tasks. Those are the natural
+next steps for the AI side of the project.
 
 ## Spec sheet
 

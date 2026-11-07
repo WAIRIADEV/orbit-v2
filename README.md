@@ -2,7 +2,8 @@
 
 A fast dual-pane file manager for Windows, built with Electron, Vite, TypeScript and React. Performance first:
 virtual lists, streamed folder listing and lazy thumbnails, so a 50,000-file folder stays smooth.
-Built by [SAINT SYSTEMS].
+Built by [SAINT SYSTEMS]
+
 
 ## Features
 
@@ -89,7 +90,7 @@ installed app has its own settings, separate from `npm run dev`. The installer i
 | Tests | 188 unit tests (Node test runner) plus Chromium checks against the built renderer |
 | Source size | about 11,600 lines of TypeScript / TSX |
 | Install size | about 370 MB unpacked (Electron) |
-| Licence | not yet chosen |
+| Licence | MIT (see `LICENSE`) |
 
 ## Architecture
 

@@ -108,7 +108,7 @@ rename, move, copy, create, zip and extract; nothing overwrites and nothing dele
 
 Tested on Linux and in Chromium, not yet on real Windows or inside real Electron: the installer build, pdf.js worker
 loading, the real Groq API with the chosen model, thumbnails, video and PDF behaviour, the Recycle Bin view, ZIP on
-real files. Details and history of every bug: [docs/LESSONS.md](orbit v2/orbit/docs/LESSONS.md).
+real files. Details and history of every bug: [docs/LESSONS.md](orbit-v2/orbit/docs/LESSONS.md).
 
 ## Major errors we hit (and fixed)
 

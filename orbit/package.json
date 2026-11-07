@@ -1,0 +1,76 @@
+{
+  "name": "orbit",
+  "version": "0.1.0",
+  "description": "ORBIT - fast dual-pane file manager",
+  "main": "out/main/index.js",
+  "scripts": {
+    "dev": "electron-vite dev",
+    "build": "electron-vite build",
+    "preview": "electron-vite preview",
+    "typecheck": "tsc --noEmit -p tsconfig.json",
+    "test": "node --experimental-strip-types --test \"src/**/*.test.ts\"",
+    "postinstall": "node scripts/postinstall.mjs",
+    "dist": "electron-vite build && electron-builder --win nsis",
+    "dist:portable": "electron-vite build && electron-builder --win portable",
+    "dist:dir": "electron-vite build && electron-builder --win --dir"
+  },
+  "dependencies": {
+    "pdfjs-dist": "4.10.38"
+  },
+  "devDependencies": {
+    "@tanstack/react-virtual": "^3.10.0",
+    "@types/node": "^22.0.0",
+    "@types/react": "^18.3.0",
+    "@types/react-dom": "^18.3.0",
+    "@types/yauzl": "3.4.0",
+    "@types/yazl": "3.3.1",
+    "@vitejs/plugin-react": "^4.3.0",
+    "electron": "^33.0.0",
+    "electron-builder": "26.18.0",
+    "electron-vite": "^2.3.0",
+    "react": "^18.3.1",
+    "react-dom": "^18.3.1",
+    "typescript": "^5.6.0",
+    "vite": "^5.4.0",
+    "yauzl": "3.4.0",
+    "yazl": "3.3.1",
+    "zustand": "^5.0.0"
+  },
+  "author": "SAINT SYSTEMS",
+  "build": {
+    "appId": "com.saintsystems.orbit",
+    "productName": "ORBIT",
+    "copyright": "SAINT SYSTEMS",
+    "directories": {
+      "output": "dist",
+      "buildResources": "resources"
+    },
+    "files": [
+      "out/**",
+      "resources/**",
+      "package.json"
+    ],
+    "asar": false,
+    "win": {
+      "icon": "resources/icon.ico",
+      "target": [
+        "nsis"
+      ]
+    },
+    "nsis": {
+      "oneClick": false,
+      "perMachine": false,
+      "allowToChangeInstallationDirectory": true,
+      "createDesktopShortcut": true,
+      "createStartMenuShortcut": true,
+      "shortcutName": "ORBIT",
+      "installerIcon": "resources/icon.ico",
+      "uninstallerIcon": "resources/icon.ico",
+      "installerHeaderIcon": "resources/icon.ico",
+      "artifactName": "ORBIT-Setup-${version}.exe"
+    },
+    "portable": {
+      "artifactName": "ORBIT-Portable-${version}.exe"
+    }
+  }
+}
